@@ -1,0 +1,13 @@
+{
+  "id": "./",
+  "name": "HeavenzFire Mobile Command Terminal",
+  "short_name": "HF Command",
+  "description": "Local-first mobile task proposal and browser workflow console",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1016",
+  "theme_color": "#10151d",
+  "categories": ["productivity", "developer", "utilities"]
+}
