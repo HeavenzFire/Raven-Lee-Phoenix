@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10151d">
+<meta name="description" content="HeavenzFire mobile-first command terminal and task proposal console">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>HeavenzFire // Mobile Command</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1016;--panel:#111923;--line:#263545;--text:#e6edf3;--muted:#91a3b5;--accent:#74e0b1;--warn:#ffcc80;--bad:#ff8a8a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#172535 0,var(--bg) 58%);color:var(--text);font:15px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;min-height:100vh}
+main{max-width:900px;margin:auto;padding:calc(16px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.brand{font-size:1rem;letter-spacing:.09em;font-weight:800}.sub{color:var(--muted);font-size:.75rem}.status{border:1px solid var(--line);border-radius:99px;padding:4px 9px;font-size:.72rem;color:var(--accent)}
+.panel{background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;box-shadow:0 12px 35px #0002}.panel h2{font-size:.82rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 12px}
+label{display:block;color:var(--muted);font-size:.78rem;margin:10px 0 5px}input,textarea,select{font:inherit;color:var(--text);background:#080d12;border:1px solid #34475a;border-radius:9px;padding:11px;width:100%;outline-offset:2px}textarea{min-height:105px;resize:vertical}input:focus,textarea:focus{border-color:var(--accent)}
+.row{display:grid;grid-template-columns:1fr;gap:10px}.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}button{font:inherit;font-weight:700;border-radius:9px;padding:10px 13px;border:1px solid var(--line);background:#1a2937;color:var(--text);cursor:pointer;min-height:42px}button.primary{background:var(--accent);color:#07120d;border-color:var(--accent)}button:disabled{opacity:.5;cursor:not-allowed}
+#terminal{background:#070b10;border:1px solid var(--line);border-radius:10px;padding:12px;min-height:150px;max-height:280px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.82rem}.ok{color:var(--accent)}.warn{color:var(--warn)}.err{color:var(--bad)}.muted{color:var(--muted)}.task{border-top:1px solid var(--line);padding:10px 0}.task:first-child{border-top:0}.task strong{display:block;overflow-wrap:anywhere}.task small{color:var(--muted);display:block;margin-top:3px}.pill{display:inline-block;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--warn);font-size:.7rem;margin-top:6px}.foot{color:var(--muted);font-size:.72rem;text-align:center;margin:18px 0}
+@media(min-width:680px){main{padding-left:22px;padding-right:22px}.row.two{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body><main>
+<header><div><div class="brand">HEAVENZFIRE <span class="ok">//</span> MOBILE COMMAND</div><div class="sub">TERMINAL × BROWSER WORKFLOW · TASK PROPOSALS</div></div><span class="status" id="mode">DEMO MODE</span></header>
+<section class="panel"><h2>01 / Connection</h2>
+<div class="row two"><div><label for="api">Task Inbox API Base URL</label><input id="api" type="url" placeholder="https://your-private-bridge.example"></div><div><label for="token">Session grant (not saved)</label><input id="token" type="password" autocomplete="off" placeholder="Optional bearer grant"></div></div>
+<div class="buttons"><button id="connect">Check connection</button><button id="demo">Use demo mode</button><button id="refresh">Refresh tasks</button></div>
+<p class="sub">No connection is assumed. A laptop loopback address (127.0.0.1) will not reach the laptop from your phone. Do not expose an unauthenticated inbox to your LAN or the internet.</p></section>
+<section class="panel"><h2>02 / Task terminal</h2><div id="terminal" role="log" aria-live="polite"><span class="ok">[boot]</span> Mobile Command Terminal ready.<br><span class="warn">[policy]</span> Submissions remain proposed/pending. This interface does not execute shell text.</div>
+<label for="goal">Task / instruction</label><textarea id="goal" maxlength="12000" placeholder="Describe a bounded task for the HeavenzFire task queue…"></textarea>
+<div class="row two"><div><label for="source">Task source</label><input id="source" value="mobile-command-terminal" maxlength="128"></div><div><label for="taskid">Task ID (generated if blank)</label><input id="taskid" placeholder="auto-generated"></div></div>
+<div class="buttons"><button class="primary" id="submit">Submit proposal</button><button id="clear">Clear terminal</button></div></section>
+<section class="panel"><h2>03 / Task queue</h2><div id="tasks"><p class="muted">No tasks loaded. Connect to a secured task inbox or use demo mode.</p></div></section>
+<section class="panel"><h2>04 / Browser helper</h2><p class="sub">This is the planned userscript-manager side of the combined tool: future adapters can capture a page URL/title and send a user-approved task proposal. No page injection or remote script execution is enabled in this initial version.</p><div class="buttons"><button id="capture">Capture this page as proposal</button></div></section>
+<p class="foot">LOCAL-FIRST · EXPLICIT APPROVAL · AUDITABLE TASKS · NO ARBITRARY COMMAND EXECUTION</p>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+let demoMode=true;let demoTasks=[];let history=[];
+function log(message,kind=''){const box=$('terminal');const line=document.createElement('div');if(kind)line.className=kind;line.textContent='['+new Date().toLocaleTimeString()+'] '+message;box.appendChild(line);box.scrollTop=box.scrollHeight;}
+function baseUrl(){return $('api').value.trim().replace(/\/+$/,'');}
+function setMode(){ $('mode').textContent=demoMode?'DEMO MODE':'API MODE'; $('mode').style.color=demoMode?'var(--warn)':'var(--accent)';}
+function makeRecord(goal){const now=new Date().toISOString();return {schema:'heavenzfire.shared-task.v1',taskId:$('taskid').value.trim()||('hf-mobile-'+crypto.randomUUID()),source:$('source').value.trim()||'mobile-command-terminal',goal:goal.trim(),status:'proposed',approvalState:'pending',evidence:[],createdAt:now,updatedAt:now,metadata:{client:'HeavenzFire Mobile Command Terminal',clientVersion:'0.1.0',mode:demoMode?'demo':'api'}};}
+async function request(path,options={}){const base=baseUrl();if(!base)throw new Error('Set a secured API base URL first.');const headers={'Content-Type':'application/json',...(options.headers||{})};const token=$('token').value.trim();if(token)headers.Authorization='Bearer '+token;const response=await fetch(base+path,{...options,headers,cache:'no-store'});const body=await response.json().catch(()=>({}));if(!response.ok)throw new Error(body.detail||body.error||('HTTP '+response.status));return body;}
+function renderTasks(tasks){const root=$('tasks');root.replaceChildren();if(!tasks.length){const p=document.createElement('p');p.className='muted';p.textContent='No task records returned.';root.appendChild(p);return;}for(const task of tasks){const item=document.createElement('div');item.className='task';const title=document.createElement('strong');title.textContent=task.goal||task.title||task.taskId;const meta=document.createElement('small');meta.textContent=(task.taskId||'unknown id')+' · '+(task.createdAt||'time unknown');const pill=document.createElement('span');pill.className='pill';pill.textContent=(task.status||'unknown')+' / '+(task.approvalState||'unknown');item.append(title,meta,pill);root.appendChild(item);}}
+async function refresh(){try{if(demoMode){renderTasks(demoTasks);log('Loaded '+demoTasks.length+' demo task(s).','ok');return;}const data=await request('/api/tasks?limit=50');renderTasks(data.tasks||[]);log('Task inbox read: '+(data.total??(data.tasks||[]).length)+' record(s).','ok');}catch(e){log('Task refresh failed: '+e.message,'err');}}
+$('connect').addEventListener('click',async()=>{demoMode=false;setMode();try{const health=await request('/health',{method:'GET',headers:{'Content-Type':'application/json'}});log('Connected to '+(health.service||'task inbox')+'; health='+String(health.ok),'ok');await refresh();}catch(e){log('Connection not verified: '+e.message,'err');}});
+$('demo').addEventListener('click',()=>{demoMode=true;setMode();log('Demo mode enabled; proposals stay in this browser only.','warn');refresh();});
+$('refresh').addEventListener('click',refresh);
+$('submit').addEventListener('click',async()=>{const goal=$('goal').value.trim();if(!goal){log('Enter a task before submitting.','warn');return;}if(goal.length>12000){log('Task exceeds the 12,000-character limit.','err');return;}const record=makeRecord(goal);if(!record.source){log('Task source is required.','err');return;}if(!confirm('Submit this as a proposed/pending task? It will not be executed by this client.'))return;try{if(demoMode){demoTasks.unshift(record);renderTasks(demoTasks);log('DEMO proposal recorded in this page only: '+record.taskId,'warn');}else{const result=await request('/api/tasks',{method:'POST',body:JSON.stringify({taskRecord:record})});log('Proposal accepted by inbox: '+result.taskId+' ('+result.status+'). No execution requested.','ok');await refresh();}history.push(goal);$('goal').value='';$('taskid').value='';}catch(e){log('Submission failed: '+e.message,'err');}});
+$('clear').addEventListener('click',()=>{$('terminal').replaceChildren();log('Terminal view cleared. Task data was not deleted.','ok');});
+$('capture').addEventListener('click',()=>{const description='Review this page as a candidate task input. Page title: '+document.title+'. Page URL: '+location.href+'. Summarize relevant content only after an operator supplies a secure bridge.';$('goal').value=description;$('goal').focus();log('Page metadata placed in the composer; submit is still manual.','ok');});
+setMode();
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('./sw.js').catch(()=>log('Offline cache unavailable in this context.','warn'));
+</script></body></html>
