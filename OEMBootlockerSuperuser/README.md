@@ -38,3 +38,11 @@ The script emits JSON and does not change device state. Some properties may be a
 - [ ] Connect status reports to the HeavenzFire mobile terminal through the existing authenticated task-inbox contract.
 - [ ] Implement an action broker only after verifying device identity, grant issuance/revocation, and audit storage.
 - [ ] Test on a spare, recoverable development device before boot-chain modifications.
+
+## Device-specific implementation
+
+- [FOXXD A67L build profile and verification checklist](./DEVICE-PROFILE.md)
+- [Deterministic status-probe tests](./tests/test-status-probe.sh)
+- [GitHub Actions workflow](../.github/workflows/oem-status-tests.yml)
+
+The test workflow is configured, but no passing CI result is claimed until GitHub reports a completed run.
