@@ -1,0 +1,31 @@
+{
+  "schema": "heavenzfire.privileged-action-policy.v1",
+  "mode": "deny-by-default",
+  "networkPrivilegedExecution": false,
+  "requireExplicitApprovalPerAction": true,
+  "requireDeviceBinding": true,
+  "requireShortLivedGrant": true,
+  "requireReplayProtection": true,
+  "audit": {
+    "enabled": true,
+    "recordDecisionAndResult": true,
+    "neverRecordSecrets": true
+  },
+  "allowedActions": [
+    {
+      "id": "device.status.read",
+      "description": "Collect non-mutating Android boot and superuser status",
+      "risk": "read-only",
+      "requiresRoot": false,
+      "approval": "session"
+    }
+  ],
+  "deniedActionClasses": [
+    "arbitrary-shell",
+    "bootloader-unlock-without-device-specific-confirmation",
+    "disable-verified-boot",
+    "credential-extraction",
+    "stealth-or-persistence",
+    "remote-root-daemon"
+  ]
+}
