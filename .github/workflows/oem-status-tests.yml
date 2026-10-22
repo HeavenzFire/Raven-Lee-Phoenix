@@ -1,0 +1,19 @@
+name: OEM status probe tests
+on:
+  push:
+    paths:
+      - 'OEMBootlockerSuperuser/**'
+      - '.github/workflows/oem-status-tests.yml'
+  pull_request:
+    paths:
+      - 'OEMBootlockerSuperuser/**'
+      - '.github/workflows/oem-status-tests.yml'
+  workflow_dispatch:
+jobs:
+  read-only-probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run deterministic status probe test
+        shell: bash
+        run: sh OEMBootlockerSuperuser/tests/test-status-probe.sh
